@@ -21,7 +21,7 @@ Jomar arrives at the shop on Saturday morning with a bag of laundry and a class 
 | Task | Screen | Requirement ID |
 | --- | --- | --- |
 | Drop off a load and get a ticket | Join | FR-01 |
-| Check my status and how many loads are ahead | My place | FR-02 |
+| Check my status and how many loads are ahead | My place | FR-0    2 |
 
 ### What this means for my interface
 
@@ -37,7 +37,7 @@ Jomar arrives at the shop on Saturday morning with a bag of laundry and a class 
 
 | | |
 | --- | --- |
-| **Photo or sketch** | Stock Picture    |
+| **Photo or sketch** | Stock Picture |
 | **Age, role and background** | 42, owner and attendant of a small neighborhood laundry shop, handles drop-offs, washing, and pickups herself |
 | **Goals** | Know which load to process next. Stop answering "is mine ready?" all day. Clear unclaimed laundry from the shelves. |
 | **Frustrations** | Keeps orders in a notebook that gets messy. Customers interrupt her while she is working. Some laundry sits unclaimed for days. |
