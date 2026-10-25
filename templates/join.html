@@ -23,7 +23,8 @@
         <input id="email" name="email" type="email" autocomplete="email" required
                class="form-control {% if errors and errors.email %}is-invalid{% endif %}"
                value="{{ form.get('email', '') }}"
-               {% if errors and errors.email %}aria-describedby="email-error"{% endif %}>
+               aria-describedby="email-hint{% if errors and errors.email %} email-error{% endif %}">
+        <div id="email-hint" class="form-text">The shop may contact you about your laundry if something happens.</div>
         {% if errors and errors.email %}
           <div id="email-error" class="invalid-feedback">{{ errors.email }}</div>
         {% endif %}

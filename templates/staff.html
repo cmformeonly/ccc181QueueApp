@@ -52,11 +52,8 @@
         <td data-label="Status"><span class="badge {{ status_badges[t.status] }}">{{ status_labels[t.status] }}</span></td>
         <td class="action-cell">
           {% if t.status == "waiting" %}
-          <form method="post" action="{{ url_for('staff_action', ticket_id=t.number, action='wash') }}">
-            {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
-            <button type="submit" class="btn btn-primary"
-                    aria-label="Start washing ticket {{ t.number }}">Start washing</button>
-          </form>
+          <span class="text-body-secondary" aria-hidden="true">—</span>
+          <span class="visually-hidden">No action yet. Use "Start washing the next load" above.</span>
 
           {% elif t.status == "washing" %}
           <form method="post" action="{{ url_for('staff_action', ticket_id=t.number, action='ready') }}">
