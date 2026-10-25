@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Staff dashboard · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+  <h1 class="h3 mb-0">Staff dashboard</h1>
+
+  <form method="get" action="{{ url_for('staff_dashboard') }}" class="d-flex gap-2 align-items-center">
+    <label for="service_id" class="form-label mb-0">Service</label>
+    <select id="service_id" name="service_id" class="form-select w-auto">
+      <option value="">All services</option>
+      {% for s in services %}
+        <option value="{{ s.id }}" {% if selected == s.id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </form>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3" aria-label="Loads in line per service" role="group">
+  {% for s in services %}
+    <span class="badge text-bg-light border fs-6 fw-normal">{{ s.name }}: {{ counts[s.id] }} in line</span>
+  {% endfor %}
+</div>
+
+<form method="post" action="{{ url_for('staff_call_next') }}" class="mb-3">
+  {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
+  <button type="submit" class="btn btn-primary btn-lg">Start washing the next load</button>
+</form>
+
+{% if queue %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <caption class="caption-top">Loads in line, being washed, and ready for pickup, in order</caption>
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Name</th>
+        <th scope="col">Service</th>
+        <th scope="col">Kilos</th>
+        <th scope="col">Status</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in queue %}
+      <tr>
+        <th scope="row">{{ t.number }}</th>
+        <td>{{ t.name }}</td>
+        <td>{{ names[t.service_id] }}</td>
+        <td>{{ t.kilos }}</td>
+        <td><span class="badge {{ status_badges[t.status] }}">{{ status_labels[t.status] }}</span></td>
+        <td>
+          {% if t.status == "waiting" %}
+          <form method="post" action="{{ url_for('staff_action', ticket_id=t.number, action='wash') }}">
+            {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
+            <button type="submit" class="btn btn-primary"
+                    aria-label="Start washing ticket {{ t.number }}">Start washing</button>
+          </form>
+
+          {% elif t.status == "washing" %}
+          <form method="post" action="{{ url_for('staff_action', ticket_id=t.number, action='ready') }}">
+            {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
+            <button type="submit" class="btn btn-primary"
+                    aria-label="Mark ticket {{ t.number }} as ready for pickup">Mark ready</button>
+          </form>
+
+          {% else %}
+          <form method="post" action="{{ url_for('staff_action', ticket_id=t.number, action='serve') }}">
+            {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
+            <button type="submit" class="btn btn-success"
+                    aria-label="Mark ticket {{ t.number }} as picked up">Picked up</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="text-center py-5">
+  <p class="fs-5 mb-1">No loads in line right now.</p>
+  <p class="text-body-secondary">New tickets appear here as soon as customers join.</p>
+</div>
+{% endif %}
+{% endblock %}

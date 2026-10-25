@@ -16,12 +16,14 @@
               {% elif ahead == 1 %}1 load ahead of you
               {% else %}{{ ahead }} loads ahead of you{% endif %}
             </p>
-          {% elif ticket.status == "called" %}
+          {% elif ticket.status == "washing" %}
             <p class="fs-4 fw-semibold mb-2">Your laundry is being washed.</p>
+          {% elif ticket.status == "called" %}
+            <p class="fs-4 fw-semibold mb-2">Your laundry is ready for pickup!</p>
           {% elif ticket.status == "served" %}
             <p class="fs-4 fw-semibold mb-2">All done. Thanks for picking up!</p>
           {% else %}
-            <p class="fs-4 fw-semibold mb-2">This ticket is closed.</p>
+            <p class="fs-4 fw-semibold mb-2">You left the queue.</p>
           {% endif %}
           <span class="badge fs-6 {{ status_badges[ticket.status] }}">{{ status_labels[ticket.status] }}</span>
         </div>

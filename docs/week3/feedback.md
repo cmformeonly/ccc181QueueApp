@@ -8,12 +8,12 @@
 
 ## My place
 
-**Works well:** The ticket number and "loads ahead" are the largest things at the top on both frames, and the tracker (In line, Washing now, Picked up) shows where the laundry is without any reading. This follows my rule that Jomar must see his place first and gives visibility of status.
-**Problem:** The page says "Updates automatically" but never shows when it last updated, so Jomar can't tell whether the number is current or the connection is stuck. That breaks visibility of status.
-**Change:** Add "Last updated: (Time)" to the note on both frames. Use the same words on every screen: In line, Washing now, Picked up, Not collected.
+**Works well:** The ticket number and "loads ahead" are the largest things at the top on both frames, and the tracker shows where the laundry is without any reading. This follows my rule that Jomar must see his place first and gives visibility of status.
+**Problem:** My first version of the tracker stopped at "Washing now" and "Picked up", so Jomar had no signal that his laundry was finished and ready. He would have to keep coming back to ask, which is the frustration this app is meant to remove. That breaks visibility of status. The page also said "Updates automatically" but never showed when it last updated.
+**Change:** Add a "Ready for pickup" step to the tracker, so the steps are In line, Washing now, Ready for pickup, and Picked up, with the message "Your laundry is ready for pickup!". Add "Last updated: 2:05 PM" under the note on both frames. Use the same words on every screen.
 
 ## Staff dashboard
 
-**Works well:** The loads are sorted by status (three columns on the laptop, three tabs on the phone), with the next load first and a large "Start washing" button as the first action. This follows my rule for Aling Nena that the most frequent action must be easy to reach with wet or busy hands.
-**Problem:** "Picked up" and "Not collected" sit next to each other at the same size, so she could tap "Not collected" by accident, and nothing lets her undo it. That is an error prevention problem.
-**Change:** Put more space between the two buttons, make "Not collected" look secondary, and ask for confirmation before it applies. Keep the counts on the tabs so she can see at a glance that loads are waiting in another tab. 
+**Works well:** The loads are sorted by status (three columns on the laptop, three tabs on the phone), with the next load first and a large button as the first action. Each status shows exactly one main button (Start washing, Mark ready, or Picked up). This follows my rule for Aling Nena that the most frequent action must be easy to reach with wet or busy hands.
+**Problem:** My first version put "Picked up" and "Not collected" side by side at the same size, so she could tap "Not collected" by accident, and nothing let her undo it. That is an error prevention problem. The phone tab was also called "Missed" while other screens said "Not collected", which was inconsistent.
+**Change:** Remove "Not collected" from the staff screen, since the only action a ready load needs is "Picked up", and customers can already cancel their own ticket with "Leave the queue". The tabs and columns are now In line, Washing now, and Ready for pickup, with counts. A load that is never collected stays in Ready for pickup, which I accept for this version.
