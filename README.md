@@ -1,1 +1,3 @@
-# ccc181QueueApp
+# Wash'NLearn
+
+Wash'NLearn is a queue system for a neighborhood laundry shop. Customers get a ticket when they drop off their laundry and can check how many loads are ahead of them from their phone, while staff update each load as it is washed and picked up. To run it, create a virtual environment with `python -m venv .venv`, activate it, install the packages with `pip install -r requirements.txt`, then start the app with `flask --app app run --debug` and open http://127.0.0.1:5000.

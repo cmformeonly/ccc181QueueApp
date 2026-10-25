@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2 class="h5">Laundry queue</h2>
+<p>Drop off your laundry, get a ticket, and check your place in line from your phone.</p>
+<ul>
+  {% for s in services %}
+  <li>{{ s.name }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}
