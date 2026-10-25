@@ -1,7 +1,43 @@
 {% extends "base.html" %}
+{% block title %}Ticket #{{ ticket.number }} · {{ app_name }}{% endblock %}
 
-{% block title %}Ticket #{{ ticket_id }} · {{ app_name }}{% endblock %}
 {% block content %}
-<h1 class="h3">Your ticket: #{{ ticket_id }}</h1>
-<p>full place page is coming soon.</p>
-{% endblock %}  
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card text-center">
+      <div class="card-body p-4">
+        <p class="text-body-secondary mb-0">Your ticket</p>
+        <p class="display-1 fw-bold mb-3">#{{ ticket.number }}</p>
+
+        <div id="live-status" aria-live="polite">
+          {% if ticket.status == "waiting" %}
+            <p class="fs-4 fw-semibold mb-2">
+              {% if ahead == 0 %}You're next!
+              {% elif ahead == 1 %}1 load ahead of you
+              {% else %}{{ ahead }} loads ahead of you{% endif %}
+            </p>
+          {% elif ticket.status == "called" %}
+            <p class="fs-4 fw-semibold mb-2">Your laundry is being washed.</p>
+          {% elif ticket.status == "served" %}
+            <p class="fs-4 fw-semibold mb-2">All done. Thanks for picking up!</p>
+          {% else %}
+            <p class="fs-4 fw-semibold mb-2">This ticket is closed.</p>
+          {% endif %}
+          <span class="badge fs-6 {{ status_badges[ticket.status] }}">{{ status_labels[ticket.status] }}</span>
+        </div>
+
+        <hr>
+        <p class="mb-1">Service: {{ service.name }}</p>
+        <p class="mb-1">Kilos: {{ ticket.kilos }}</p>
+        <p class="text-body-secondary small mb-3" id="last-updated">Updates automatically.</p>
+
+        {% if ticket.status == "waiting" %}
+          <form method="post" action="{{ url_for('leave', ticket_id=ticket.number) }}">
+            <button type="submit" class="btn btn-outline-secondary">Leave the queue</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
