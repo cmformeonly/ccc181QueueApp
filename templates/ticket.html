@@ -6,9 +6,8 @@
   <div class="col-12 col-md-8 col-lg-6">
     <div class="card text-center">
       <div class="card-body p-4">
-        <p class="text-body-secondary mb-0">Your ticket</p>
+        <h1 class="h6 text-body-secondary mb-0">Your ticket</h1>
         <p class="display-1 fw-bold mb-3">#{{ ticket.number }}</p>
-
         <div id="live-status" aria-live="polite">
           <p id="status-message" class="fs-4 fw-semibold mb-2">{{ message }}</p>
           <span id="status-badge" class="badge fs-6 {{ status_badges[ticket.status] }}">{{ status_labels[ticket.status] }}</span>

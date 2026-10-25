@@ -19,7 +19,7 @@
 
 <div class="d-flex flex-wrap gap-2 mb-3" aria-label="Loads in line per service" role="group">
   {% for s in services %}
-    <span class="badge text-bg-light border fs-6 fw-normal">{{ s.name }}: {{ counts[s.id] }} </span>
+    <span class="badge text-bg-light border fs-6 fw-normal">{{ s.name }}: {{ counts[s.id] }} in line</span>
   {% endfor %}
 </div>
 
@@ -30,7 +30,7 @@
 
 {% if queue %}
 <div class="table-responsive">
-  <table class="table table-hover align-middle">
+  <table class="table table-hover align-middle queue-table">
     <caption class="caption-top">Loads in line, being washed, and ready for pickup, in order</caption>
     <thead>
       <tr>
@@ -45,12 +45,12 @@
     <tbody>
       {% for t in queue %}
       <tr>
-        <th scope="row">{{ t.number }}</th>
-        <td>{{ t.name }}</td>
-        <td>{{ names[t.service_id] }}</td>
-        <td>{{ t.kilos }}</td>
-        <td><span class="badge {{ status_badges[t.status] }}">{{ status_labels[t.status] }}</span></td>
-        <td>
+        <th scope="row" data-label="Ticket">{{ t.number }}</th>
+        <td data-label="Name">{{ t.name }}</td>
+        <td data-label="Service">{{ names[t.service_id] }}</td>
+        <td data-label="Kilos">{{ t.kilos }}</td>
+        <td data-label="Status"><span class="badge {{ status_badges[t.status] }}">{{ status_labels[t.status] }}</span></td>
+        <td class="action-cell">
           {% if t.status == "waiting" %}
           <form method="post" action="{{ url_for('staff_action', ticket_id=t.number, action='wash') }}">
             {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
