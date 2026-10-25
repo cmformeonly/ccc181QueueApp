@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Ticket #{{ ticket.number }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card text-center">
+      <div class="card-body p-4">
+        <h1 class="h6 text-body-secondary mb-0">Your ticket</h1>
+        <p class="display-1 fw-bold mb-3">#{{ ticket.number }}</p>
+        <div id="live-status" aria-live="polite">
+          <p id="status-message" class="fs-4 fw-semibold mb-2">{{ message }}</p>
+          <span id="status-badge" class="badge fs-6 {{ status_badges[ticket.status] }}">{{ status_labels[ticket.status] }}</span>
+        </div>
+
+        <hr>
+        <p class="mb-1">Service: {{ service.name }}</p>
+        <p class="mb-1">Kilos: {{ ticket.kilos }}</p>
+        <p class="text-body-secondary small mb-3" id="last-updated">Updates automatically.</p>
+
+        {% if ticket.status == "waiting" %}
+          <form id="leave-form" method="post" action="{{ url_for('leave', ticket_id=ticket.number) }}">
+            <button type="submit" class="btn btn-outline-secondary">Leave the queue</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const statusUrl = "{{ url_for('ticket_status', ticket_id=ticket.number) }}";
+  const finalStatuses = ["served", "no-show"];
+  let timer = null;
+
+  async function refreshStatus() {
+    try {
+      const res = await fetch(statusUrl);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      document.getElementById("status-message").textContent = data.message;
+      const badge = document.getElementById("status-badge");
+      badge.className = "badge fs-6 " + data.badge;
+      badge.textContent = data.label;
+
+      const time = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      document.getElementById("last-updated").textContent =
+        "Updates automatically. Last updated: " + time;
+
+      const leaveForm = document.getElementById("leave-form");
+      if (leaveForm && data.status !== "waiting") {
+        leaveForm.hidden = true;
+      }
+
+      if (finalStatuses.includes(data.status)) {
+        clearInterval(timer);
+      }
+    } catch (err) {
+      console.warn("Could not refresh status", err);
+    }
+  }
+
+  timer = setInterval(refreshStatus, 10000);
+</script>
+{% endblock %}

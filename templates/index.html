@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="py-5 text-center">
+  <h1 class="display-5">{{ app_name }}</h1>
+  <p class="lead">Drop off your laundry, get a ticket, and check your place in line from your phone.</p>
+  <a class="btn btn-primary btn-lg" href="{{ url_for('join_form') }}">Join the queue</a>
+</div>
+{% endblock %}
