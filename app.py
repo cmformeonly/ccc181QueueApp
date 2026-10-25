@@ -9,7 +9,7 @@ from flask import Flask, abort, flash, redirect, render_template, request, url_f
 app = Flask(__name__)
 app.secret_key = "dev-only-change-me"  # Week 11 moves this into an environment variable
 
-APP_NAME = "Wash'NLearn"
+APP_NAME = "Wash'NLearn"    
 
 SERVICES = [
     {"id": 1, "name": "Wash and fold"},
@@ -50,6 +50,28 @@ def inject_globals():
         "status_labels": STATUS_LABELS,
         "status_badges": STATUS_BADGES,
     }
+
+
+def count_ahead(t):
+    return sum(1 for x in TICKETS
+               if x["service_id"] == t["service_id"]
+               and x["status"] == "waiting"
+               and x["number"] < t["number"])
+
+
+def status_message(status, ahead):
+    if status == "waiting":
+        if ahead == 0:
+            return "You're next!"
+        if ahead == 1:      
+            return "1 load ahead of you"
+        return f"{ahead} loads ahead of you"
+    return {
+        "washing": "Your laundry is being washed.",
+        "called": "Your laundry is ready for pickup!",
+        "served": "All done. Thanks for picking up!",
+        "no-show": "You left the queue.",
+    }[status]
 
 
 @app.route("/")
@@ -143,14 +165,26 @@ def staff_action(ticket_id, action):
 @app.get("/queue/<int:ticket_id>")
 def ticket(ticket_id):
     t = next((t for t in TICKETS if t["number"] == ticket_id), None)
-    if t is None:
+    if t is None:       
         abort(404)
-    ahead = [x for x in TICKETS
-             if x["service_id"] == t["service_id"]
-             and x["status"] == "waiting"
-             and x["number"] < t["number"]]
     service = next(s for s in SERVICES if s["id"] == t["service_id"])
-    return render_template("ticket.html", ticket=t, service=service, ahead=len(ahead))
+    message = status_message(t["status"], count_ahead(t))
+    return render_template("ticket.html", ticket=t, service=service, message=message)
+
+
+@app.get("/queue/<int:ticket_id>/status.json")
+def ticket_status(ticket_id):
+    t = next((t for t in TICKETS if t["number"] == ticket_id), None)
+    if t is None:   
+        abort(404)
+    ahead = count_ahead(t)
+    return {
+        "status": t["status"],
+        "label": STATUS_LABELS[t["status"]],
+        "badge": STATUS_BADGES[t["status"]],
+        "message": status_message(t["status"], ahead),
+        "ahead": ahead,
+    }
 
 
 @app.post("/queue/<int:ticket_id>/leave")
