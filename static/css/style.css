@@ -1,13 +1,23 @@
 /* Colors borrowed from the Week 2 slide deck */
 :root {
-  --navy: #16223A;
-  --paper: #F6F4EE;
-  --card: #FFFDF8;
-  --teal: #2D6F78;
-  --orange: #B4501E;
+  --bs-primary: #0e7490;
+  --bs-primary-rgb: 14, 116, 144;
+  --bs-link-color: #0e7490;
+  --bs-link-hover-color: #155e75;
 }
 
-body {
+.btn-primary {
+  --bs-btn-bg: #0e7490;
+  --bs-btn-border-color: #0e7490;
+  --bs-btn-hover-bg: #155e75;
+  --bs-btn-hover-border-color: #155e75;
+  --bs-btn-active-bg: #164e63;
+  --bs-btn-active-border-color: #164e63;
+  --bs-btn-disabled-bg: #0e7490;
+  --bs-btn-disabled-border-color: #0e7490;
+}
+
+body {  
   margin: 0;
   font-family: "IBM Plex Sans", Arial, sans-serif;
   background: var(--paper);
