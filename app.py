@@ -26,6 +26,21 @@ migrate = Migrate(app, db)
 
 APP_NAME = "Wash'NLearn"    
 
+@app.cli.command("seed")
+def seed():
+    """Add the starting services if they are not there yet."""
+    starting = [
+        ("Wash and fold", 90),
+        ("Dry only", 45),
+        ("Comforter / bulky items", 120),
+    ]
+    for name, minutes in starting:
+        exists = db.session.scalar(db.select(Service).filter_by(name=name))
+        if exists is None:
+            db.session.add(Service(name=name, avg_minutes=minutes))
+    db.session.commit()
+    print("Services are ready.")
+
 SERVICES = [
     {"id": 1, "name": "Wash and fold"},
     {"id": 2, "name": "Dry only"},
