@@ -6,6 +6,7 @@ then open http://127.0.0.1:5000
 """
 import os
 
+from datetime import timedelta, timezone
 from dotenv import load_dotenv
 from flask import Flask, abort, flash, redirect, render_template, request, url_for
 from flask_migrate import Migrate
@@ -24,7 +25,16 @@ app.config["SQLALCHEMY_ECHO"] = os.environ.get("SQLALCHEMY_ECHO") == "1"
 db.init_app(app)
 migrate = Migrate(app, db)
 
-APP_NAME = "Wash'NLearn"    
+APP_NAME = "Wash'NLearn"
+
+PH_TIME = timezone(timedelta(hours=8)) 
+
+
+@app.template_filter("local")
+def local_time(value):
+    """Show a database time in Philippine time, e.g. Nov 08, 08:01 AM."""
+    return value.astimezone(PH_TIME).strftime("%b %d, %I:%M %p") if value else ""
+
 
 @app.cli.command("seed")
 def seed():
@@ -47,14 +57,14 @@ STATUS_LABELS = {
     "washing": "Washing now",
     "called": "Ready for pickup",
     "served": "Picked up",
-    "no-show": "Left the queue",
+    "left": "Left the queue",
 }
 STATUS_BADGES = {
     "waiting": "text-bg-secondary",
     "washing": "text-bg-info",
     "called": "text-bg-primary",
     "served": "text-bg-success",
-    "no-show": "text-bg-warning",
+    "left": "text-bg-warning",
 }
 
 
@@ -68,11 +78,23 @@ def inject_globals():
     }
 
 
-def count_ahead(t):
-    return sum(1 for x in TICKETS
-               if x["service_id"] == t["service_id"]
-               and x["status"] == "waiting"
-               and x["number"] < t["number"])
+def people_ahead(t):
+    """Count tickets still waiting for the same service that joined before t."""
+    stmt = (db.select(func.count())
+            .select_from(Ticket)
+            .where(Ticket.service_id == t.service_id,
+                   Ticket.status == "waiting",
+                   Ticket.created_at < t.created_at))
+    return db.session.scalar(stmt)
+
+
+def waiting_counts():
+    """How many loads are in line for each service (the star feature)."""
+    stmt = (db.select(Ticket.service_id, func.count())
+            .where(Ticket.status == "waiting")
+            .group_by(Ticket.service_id))
+    by_service = dict(db.session.execute(stmt).all())
+    return {s.id: by_service.get(s.id, 0) for s in all_services()}
 
 
 def status_message(status, ahead):
@@ -86,7 +108,7 @@ def status_message(status, ahead):
         "washing": "Your laundry is being washed.",
         "called": "Your laundry is ready for pickup!",
         "served": "All done. Thanks for picking up!",
-        "no-show": "You left the queue.",
+        "left": "You left the queue.",
     }[status]
 
 
@@ -148,16 +170,14 @@ def join():
 @app.get("/staff")
 def staff_dashboard():
     service_id = request.args.get("service_id", type=int)
-    queue = [t for t in TICKETS if t["status"] in ("waiting", "washing", "called")]
+    stmt = (db.select(Ticket)
+            .where(Ticket.status.in_(["waiting", "washing", "called"]))
+            .order_by(Ticket.created_at))
     if service_id:
-        queue = [t for t in queue if t["service_id"] == service_id]
-    names = {s["id"]: s["name"] for s in SERVICES}
-    # Star feature: how many loads are in line for each service.
-    counts = {s["id"]: sum(1 for t in TICKETS
-                           if t["service_id"] == s["id"] and t["status"] == "waiting")
-              for s in SERVICES}
-    return render_template("staff.html", queue=queue, services=SERVICES,
-                           names=names, selected=service_id, counts=counts)
+        stmt = stmt.where(Ticket.service_id == service_id)
+    queue = db.session.scalars(stmt).all()
+    return render_template("staff.html", queue=queue, services=all_services(),
+                           selected=service_id, counts=waiting_counts())
 
 
 @app.post("/staff/call-next")
@@ -196,25 +216,21 @@ def staff_action(ticket_id, action):
 
 @app.get("/queue/<int:ticket_id>")
 def ticket(ticket_id):
-    t = next((t for t in TICKETS if t["number"] == ticket_id), None)
-    if t is None:       
-        abort(404)
-    service = next(s for s in SERVICES if s["id"] == t["service_id"])
-    message = status_message(t["status"], count_ahead(t))
-    return render_template("ticket.html", ticket=t, service=service, message=message)
+    t = db.get_or_404(Ticket, ticket_id)
+    message = status_message(t.status, people_ahead(t))
+    return render_template("ticket.html", ticket=t, service=t.service, message=message)
+
 
 
 @app.get("/queue/<int:ticket_id>/status.json")
 def ticket_status(ticket_id):
-    t = next((t for t in TICKETS if t["number"] == ticket_id), None)
-    if t is None:   
-        abort(404)
-    ahead = count_ahead(t)
+    t = db.get_or_404(Ticket, ticket_id)
+    ahead = people_ahead(t)
     return {
-        "status": t["status"],
-        "label": STATUS_LABELS[t["status"]],
-        "badge": STATUS_BADGES[t["status"]],
-        "message": status_message(t["status"], ahead),
+        "status": t.status,
+        "label": STATUS_LABELS[t.status],
+        "badge": STATUS_BADGES[t.status],
+        "message": status_message(t.status, ahead),
         "ahead": ahead,
     }
 

@@ -15,7 +15,8 @@
 
         <hr>
         <p class="mb-1">Service: {{ service.name }}</p>
-        <p class="mb-1">Kilos: {{ ticket.kilos }}</p>
+        <p class="mb-1">Kilos: {{ ticket.kilos_estimate }} (estimate)</p>
+        <p class="mb-1">Joined {{ ticket.created_at|local }}</p>
         <p class="text-body-secondary small mb-3" id="last-updated">Updates automatically.</p>
 
         {% if ticket.status == "waiting" %}
@@ -32,7 +33,7 @@
 {% block scripts %}
 <script>
   const statusUrl = "{{ url_for('ticket_status', ticket_id=ticket.id) }}";
-  const finalStatuses = ["served", "no-show"];
+  const finalStatuses = ["served", "left"];
   let timer = null;
 
   async function refreshStatus() {

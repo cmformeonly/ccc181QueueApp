@@ -38,6 +38,7 @@
         <th scope="col">Name</th>
         <th scope="col">Service</th>
         <th scope="col">Kilos</th>
+        <th scope="col">Joined</th>
         <th scope="col">Status</th>
         <th scope="col">Action</th>
       </tr>
@@ -45,10 +46,11 @@
     <tbody>
       {% for t in queue %}
       <tr>
-        <th scope="row" data-label="Ticket">{{ t.number }}</th>
-        <td data-label="Name">{{ t.name }}</td>
-        <td data-label="Service">{{ names[t.service_id] }}</td>
-        <td data-label="Kilos">{{ t.kilos }}</td>
+        <th scope="row" data-label="Ticket">{{ t.id }}</th>
+        <td data-label="Name">{{ t.customer.name }}</td>
+        <td data-label="Service">{{ t.service.name }}</td>
+        <td data-label="Kilos">{{ t.kilos_estimate }}</td>    
+        <td data-label="Joined">{{ t.created_at|local }}</td>
         <td data-label="Status"><span class="badge {{ status_badges[t.status] }}">{{ status_labels[t.status] }}</span></td>
         <td class="action-cell">
           {% if t.status == "waiting" %}
