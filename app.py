@@ -41,12 +41,6 @@ def seed():
     db.session.commit()
     print("Services are ready.")
 
-SERVICES = [
-    {"id": 1, "name": "Wash and fold"},
-    {"id": 2, "name": "Dry only"},
-    {"id": 3, "name": "Comforter / bulky items"},
-]
-
 # What the screen says for each status (the code values stay the same).
 STATUS_LABELS = {
     "waiting": "In line",
@@ -62,14 +56,6 @@ STATUS_BADGES = {
     "served": "text-bg-success",
     "no-show": "text-bg-warning",
 }
-
-# Each ticket: number, name, email, service_id, kilos, status
-# status is one of: waiting, washing, called, served, no-show
-# A real app would load this from a database later (Week 4).
-TICKETS = [
-    {"number": 1, "name": "Ana", "email": "ana@example.com", "service_id": 1, "kilos": 5, "status": "waiting"},
-    {"number": 2, "name": "Ben", "email": "ben@example.com", "service_id": 3, "kilos": 3, "status": "waiting"},
-]
 
 
 @app.context_processor
@@ -106,12 +92,16 @@ def status_message(status, ahead):
 
 @app.route("/")
 def index():
-    return render_template("index.html", services=SERVICES)
+    return render_template("index.html")
+
+
+def all_services():
+    return db.session.scalars(db.select(Service).order_by(Service.name)).all()
 
 
 @app.get("/join")
 def join_form():
-    return render_template("join.html", services=SERVICES, form={})
+    return render_template("join.html", services=all_services(), form={})
 
 
 @app.post("/join")
@@ -121,26 +111,38 @@ def join():
     email = form.get("email", "").strip().lower()
     service_id = form.get("service_id", type=int)
     kilos = form.get("kilos", type=int)
+    service = db.session.get(Service, service_id) if service_id else None
 
     errors = {}
-    if not name:
-        errors["name"] = "Enter your name."
-    if "@" not in email:
+    if not name or len(name) > 80:
+        errors["name"] = "Enter your name (up to 80 characters)."
+    if "@" not in email or len(email) > 120:
         errors["email"] = "Enter a valid email address."
-    if service_id not in [s["id"] for s in SERVICES]:
+    if service is None:
         errors["service_id"] = "Choose a service."
     if kilos is None or not 1 <= kilos <= 15:
         errors["kilos"] = "Enter the weight in kilos, from 1 to 15."
 
     if errors:
         flash("Please fix the highlighted fields.", "danger")
-        return render_template("join.html", services=SERVICES, form=form, errors=errors), 400
+        return render_template("join.html", services=all_services(),
+                               form=form, errors=errors), 400
 
-    number = TICKETS[-1]["number"] + 1 if TICKETS else 1
-    TICKETS.append({"number": number, "name": name, "email": email,
-                    "service_id": service_id, "kilos": kilos, "status": "waiting"})
-    flash(f"You joined the queue. Your ticket is #{number}.", "success")
-    return redirect(url_for("ticket", ticket_id=number))
+    customer = db.session.scalar(db.select(Customer).filter_by(email=email))
+    if customer is None:
+        customer = Customer(name=name, email=email)
+    ticket = Ticket(customer=customer, service=service, kilos_estimate=kilos)
+    db.session.add(ticket)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        flash("Something went wrong saving your ticket. Please try again.", "danger")
+        return render_template("join.html", services=all_services(),
+                               form=form, errors={}), 409
+
+    flash(f"You joined the queue. Your ticket is #{ticket.id}.", "success")
+    return redirect(url_for("ticket", ticket_id=ticket.id))
 
 
 @app.get("/staff")

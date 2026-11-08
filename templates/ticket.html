@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Ticket #{{ ticket.number }} · {{ app_name }}{% endblock %}
+{% block title %}Ticket #{{ ticket.id }} · {{ app_name }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -7,7 +7,7 @@
     <div class="card text-center">
       <div class="card-body p-4">
         <h1 class="h6 text-body-secondary mb-0">Your ticket</h1>
-        <p class="display-1 fw-bold mb-3">#{{ ticket.number }}</p>
+        <p class="display-1 fw-bold mb-3">#{{ ticket.id }}</p>
         <div id="live-status" aria-live="polite">
           <p id="status-message" class="fs-4 fw-semibold mb-2">{{ message }}</p>
           <span id="status-badge" class="badge fs-6 {{ status_badges[ticket.status] }}">{{ status_labels[ticket.status] }}</span>
@@ -19,7 +19,7 @@
         <p class="text-body-secondary small mb-3" id="last-updated">Updates automatically.</p>
 
         {% if ticket.status == "waiting" %}
-          <form id="leave-form" method="post" action="{{ url_for('leave', ticket_id=ticket.number) }}">
+          <form id="leave-form" method="post" action="{{ url_for('leave', ticket_id=ticket.id) }}">
             <button type="submit" class="btn btn-outline-secondary">Leave the queue</button>
           </form>
         {% endif %}
@@ -31,7 +31,7 @@
 
 {% block scripts %}
 <script>
-  const statusUrl = "{{ url_for('ticket_status', ticket_id=ticket.number) }}";
+  const statusUrl = "{{ url_for('ticket_status', ticket_id=ticket.id) }}";
   const finalStatuses = ["served", "no-show"];
   let timer = null;
 
