@@ -121,9 +121,14 @@ def all_services():
     return db.session.scalars(db.select(Service).order_by(Service.name)).all()
 
 
+def active_services():
+    stmt = db.select(Service).filter_by(active=True).order_by(Service.name)
+    return db.session.scalars(stmt).all()
+
+
 @app.get("/join")
 def join_form():
-    return render_template("join.html", services=all_services(), form={})
+    return render_template("join.html", services=active_services(), form={})
 
 
 @app.post("/join")
@@ -140,7 +145,7 @@ def join():
         errors["name"] = "Enter your name (up to 80 characters)."
     if "@" not in email or len(email) > 120:
         errors["email"] = "Enter a valid email address."
-    if service is None:
+    if service is None or not service.active:
         errors["service_id"] = "Choose a service."
     if kilos is None or not 1 <= kilos <= 15:
         errors["kilos"] = "Enter the weight in kilos, from 1 to 15."
@@ -180,38 +185,49 @@ def staff_dashboard():
                            selected=service_id, counts=waiting_counts())
 
 
+STAFF_ACTIONS = {"wash": "washing", "ready": "called", "serve": "served"}
+ALLOWED_FROM = {
+    "washing": ("waiting",),
+    "called": ("washing",),
+    "served": ("called",),
+}
+
+
 @app.post("/staff/call-next")
 def staff_call_next():
     service_id = request.form.get("service_id", type=int)
-    waiting = [t for t in TICKETS if t["status"] == "waiting"]
+    stmt = (db.select(Ticket)
+            .where(Ticket.status == "waiting")
+            .order_by(Ticket.created_at, Ticket.id)
+            .limit(1))
     if service_id:
-        waiting = [t for t in waiting if t["service_id"] == service_id]
-    if not waiting:
+        stmt = stmt.where(Ticket.service_id == service_id)
+    t = db.session.scalar(stmt)
+    if t is None:
         flash("No one is in line right now.", "warning")
     else:
-        waiting[0]["status"] = "washing"
-        flash(f"Ticket #{waiting[0]['number']} is now washing.", "info")
+        t.status = "washing"
+        db.session.commit()
+        flash(f"Ticket #{t.id} is now washing.", "info")
     return redirect(url_for("staff_dashboard", service_id=service_id))
 
 
 @app.post("/staff/tickets/<int:ticket_id>/<action>")
 def staff_action(ticket_id, action):
-    new_status = {"wash": "washing", "ready": "called", "serve": "served"}.get(action)
-    t = next((t for t in TICKETS if t["number"] == ticket_id), None)
-    if t is None or new_status is None:
+    new_status = STAFF_ACTIONS.get(action)
+    if new_status is None:
         abort(404)
-
-    allowed_from = {
-        "washing": ("waiting",),
-        "called": ("washing",),
-        "served": ("called",),
-    }
-    if t["status"] not in allowed_from[new_status]:
+    t = db.get_or_404(Ticket, ticket_id)
+    if t.status not in ALLOWED_FROM[new_status]:
         flash(f"Ticket #{ticket_id} can't be changed that way.", "warning")
     else:
-        t["status"] = new_status
+        t.status = new_status
+        if new_status == "called":
+            t.called_at = func.now()  # the database fills in the time
+        db.session.commit()
         flash(f"Ticket #{ticket_id} marked {STATUS_LABELS[new_status]}.", "info")
-    return redirect(url_for("staff_dashboard", service_id=request.form.get("service_id", type=int)))
+    return redirect(url_for("staff_dashboard",
+                            service_id=request.form.get("service_id", type=int)))
 
 
 @app.get("/queue/<int:ticket_id>")
@@ -237,13 +253,77 @@ def ticket_status(ticket_id):
 
 @app.post("/queue/<int:ticket_id>/leave")
 def leave(ticket_id):
-    t = next((t for t in TICKETS if t["number"] == ticket_id), None)
-    if t is None:
-        abort(404)
-    t["status"] = "no-show"
+    t = db.get_or_404(Ticket, ticket_id)
+    if t.status == "waiting":
+        t.status = "left"  # soft delete: the row stays for reports
+        db.session.commit()
     flash("You left the queue.", "info")
     return redirect(url_for("index"))
 
+
+@app.post("/staff/tickets/<int:ticket_id>/delete")
+def delete_ticket(ticket_id):
+    t = db.get_or_404(Ticket, ticket_id)
+    db.session.delete(t)  # hard delete: the row is gone for good
+    db.session.commit()
+    flash(f"Ticket #{ticket_id} was deleted.", "warning")
+    return redirect(url_for("staff_dashboard",
+                            service_id=request.form.get("service_id", type=int)))
+
+
+@app.get("/staff/services")
+def services_list():
+    return render_template("services.html", services=all_services())
+
+
+@app.post("/staff/services")
+def service_create():
+    name = request.form.get("name", "").strip()
+    minutes = request.form.get("avg_minutes", type=int)
+    if not name or len(name) > 60 or not minutes or minutes <= 0:
+        flash("Enter a name (up to 60 characters) and minutes greater than 0.", "danger")
+        return redirect(url_for("services_list"))
+    db.session.add(Service(name=name, avg_minutes=minutes))
+    try:
+        db.session.commit()
+        flash(f"Service “{name}” added.", "success")
+    except IntegrityError:
+        db.session.rollback()
+        flash(f"A service named “{name}” already exists.", "danger")
+    return redirect(url_for("services_list"))
+
+
+@app.post("/staff/services/<int:service_id>/edit")
+def service_edit(service_id):
+    s = db.get_or_404(Service, service_id)
+    name = request.form.get("name", "").strip()
+    minutes = request.form.get("avg_minutes", type=int)
+    if not name or len(name) > 60 or not minutes or minutes <= 0:
+        flash("Enter a name (up to 60 characters) and minutes greater than 0.", "danger")
+        return redirect(url_for("services_list"))
+    s.name = name
+    s.avg_minutes = minutes
+    s.active = request.form.get("active") == "on"  # an unticked box is not sent at all
+    try:
+        db.session.commit()
+        flash(f"Service “{name}” saved.", "success")
+    except IntegrityError:
+        db.session.rollback()
+        flash(f"A service named “{name}” already exists.", "danger")
+    return redirect(url_for("services_list"))
+
+
+@app.post("/staff/services/<int:service_id>/delete")
+def service_delete(service_id):
+    s = db.get_or_404(Service, service_id)
+    name = s.name
+    if s.tickets:
+        flash(f"“{name}” has tickets, so it cannot be deleted. Turn it off instead.", "danger")
+        return redirect(url_for("services_list"))
+    db.session.delete(s)
+    db.session.commit()
+    flash(f"Service “{name}” deleted.", "warning")
+    return redirect(url_for("services_list"))
 
 if __name__ == "__main__":
     app.run(debug=True)

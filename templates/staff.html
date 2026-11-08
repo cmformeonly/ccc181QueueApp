@@ -53,24 +53,33 @@
         <td data-label="Joined">{{ t.created_at|local }}</td>
         <td data-label="Status"><span class="badge {{ status_badges[t.status] }}">{{ status_labels[t.status] }}</span></td>
         <td class="action-cell">
-          {% if t.status == "waiting" %}
-          <span class="text-body-secondary" aria-hidden="true">—</span>
-          <span class="visually-hidden">No action yet. Use "Start washing the next load" above.</span>
+          <div class="d-flex flex-column gap-2">
+            {% if t.status == "waiting" %}
+            <span class="text-body-secondary" aria-hidden="true">—</span>
+            <span class="visually-hidden">No action yet. Use "Start washing the next load" above.</span>
 
-          {% elif t.status == "washing" %}
-          <form method="post" action="{{ url_for('staff_action', ticket_id=t.number, action='ready') }}">
-            {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
-            <button type="submit" class="btn btn-primary"
-                    aria-label="Mark ticket {{ t.number }} as ready for pickup">Mark ready</button>
-          </form>
+            {% elif t.status == "washing" %}
+            <form method="post" action="{{ url_for('staff_action', ticket_id=t.id, action='ready') }}">
+              {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
+              <button type="submit" class="btn btn-primary"
+                      aria-label="Mark ticket {{ t.id }} as ready for pickup">Mark ready</button>
+            </form>
 
-          {% else %}
-          <form method="post" action="{{ url_for('staff_action', ticket_id=t.number, action='serve') }}">
-            {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
-            <button type="submit" class="btn btn-success"
-                    aria-label="Mark ticket {{ t.number }} as picked up">Picked up</button>
-          </form>
-          {% endif %}
+            {% else %}
+            <form method="post" action="{{ url_for('staff_action', ticket_id=t.id, action='serve') }}">
+              {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
+              <button type="submit" class="btn btn-success"
+                      aria-label="Mark ticket {{ t.id }} as picked up">Picked up</button>
+            </form>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('delete_ticket', ticket_id=t.id) }}"
+                  data-confirm="Delete ticket {{ t.id }}? This cannot be undone.">
+              {% if selected %}<input type="hidden" name="service_id" value="{{ selected }}">{% endif %}
+              <button type="submit" class="btn btn-outline-danger btn-sm"
+                      aria-label="Delete ticket {{ t.id }}">Delete</button>
+            </form>
+          </div>
         </td>
       </tr>
       {% endfor %}
