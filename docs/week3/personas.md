@@ -53,8 +53,9 @@ It's a busy Saturday, and Aling Nena has six loads waiting while two machines ru
 
 | Task | Screen | Requirement ID |
 | --- | --- | --- |
-| See the waiting loads in order | Staff dashboard | FR-03 |
-| Mark a load as being washed, picked up, or not collected | Staff dashboard | FR-03 |
+| See the loads in order | Staff dashboard | FR-03 |
+| Start washing the next load | Staff dashboard | FR-04 |
+| Mark a load ready, then picked up | Staff dashboard | FR-05, FR-06 |
 
 ### What this means for my interface
 

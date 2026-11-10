@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Manage services · {{ app_name }}{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Manage services</h1>
+
+<section aria-labelledby="add-heading" class="mb-4">
+  <h2 class="h5" id="add-heading">Add a service</h2>
+  <form method="post" action="{{ url_for('service_create') }}" class="row g-2 align-items-end">
+    <div class="col-12 col-md-5">
+      <label for="new-name" class="form-label">Service name</label>
+      <input id="new-name" name="name" type="text" maxlength="60" required class="form-control">
+    </div>
+    <div class="col-8 col-md-4">
+      <label for="new-minutes" class="form-label">Average minutes</label>
+      <input id="new-minutes" name="avg_minutes" type="number" min="1" required class="form-control">
+    </div>
+    <div class="col-4 col-md-3">
+      <button type="submit" class="btn btn-primary w-100">Add</button>
+    </div>
+  </form>
+</section>
+
+<section aria-labelledby="all-heading">
+  <h2 class="h5" id="all-heading">All services</h2>
+  {% for s in services %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <form method="post" action="{{ url_for('service_edit', service_id=s.id) }}" class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+          <label for="name-{{ s.id }}" class="form-label">Service name</label>
+          <input id="name-{{ s.id }}" name="name" type="text" maxlength="60" required
+                 value="{{ s.name }}" class="form-control">
+        </div>
+        <div class="col-6 col-md-3">
+          <label for="minutes-{{ s.id }}" class="form-label">Average minutes</label>
+          <input id="minutes-{{ s.id }}" name="avg_minutes" type="number" min="1" required
+                 value="{{ s.avg_minutes }}" class="form-control">
+        </div>
+        <div class="col-6 col-md-2">
+          <div class="form-check">
+            <input id="active-{{ s.id }}" name="active" type="checkbox" class="form-check-input"
+                   {% if s.active %}checked{% endif %}>
+            <label for="active-{{ s.id }}" class="form-check-label">Active</label>
+          </div>
+        </div>
+        <div class="col-12 col-md-3">
+          <button type="submit" class="btn btn-outline-primary w-100">Save changes</button>
+        </div>
+      </form>
+
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+        <p class="mb-0 text-body-secondary">
+          {{ s.tickets|length }} ticket{{ '' if s.tickets|length == 1 else 's' }}
+          ·
+          {% if s.active %}
+            <span class="badge text-bg-success">Active</span>
+          {% else %}
+            <span class="badge text-bg-secondary">Switched off</span>
+          {% endif %}
+        </p>
+        <form method="post" action="{{ url_for('service_delete', service_id=s.id) }}"
+              data-confirm="Delete the service “{{ s.name }}”? This cannot be undone.">
+          <button type="submit" class="btn btn-outline-danger btn-sm"
+                  aria-label="Delete service {{ s.name }}">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}
