@@ -18,12 +18,12 @@
 | FR-06 | A staff member can mark a ready load as picked up. | Must | **Yes** | Built (Week 3) |
 | FR-07 | A customer can leave the queue before their load starts washing. | Must | **Yes** | Built (Week 3) |
 | FR-08 | A customer's My place page updates its status by itself within 10 seconds, without a reload. | Should | No | Built (Week 3) |
-| FR-09 | A staff member can add, rename, and switch off a service. | Must | **Yes** | This week |
+| FR-09 | A staff member can add, rename, and switch off a service. | Must | **Yes** | Built (Week 4) |
 | FR-10 ★ | A staff member can see how many loads are in line for each service. | Should | No | Built (Week 3) |
 | FR-11 ★ | A staff member can record the actual weight of a load, which may differ from the customer's estimate. | Should | **Yes** | Later |
 | FR-12 ★ | A staff member can see which loads have been ready for pickup for more than 3 days. | Should | **Yes** | Later |
 | FR-13 ★ | A customer can add a short care note to their load, such as "delicate items" or "no fabric softener", and staff can read it on the dashboard. | Could | **Yes** | Later |
-| FR-14 | A staff member can remove a ticket that was created by mistake. | Should | **Yes** | This week |
+| FR-14 | A staff member can remove a ticket that was created by mistake. | Should | **Yes** | Built (Week 4) |
 | FR-15 | A customer can get back to their ticket by entering their email address or ticket number. | Must | No | Later |
 | FR-16 ★ | A customer can see an estimated time for when their laundry will be ready. | Could | No | Later |
 
